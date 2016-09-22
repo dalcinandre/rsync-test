@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "async": "^2.0.1",
     "chokidar": "^1.6.0",
     "cluster": "^0.7.7",
     "fs": "0.0.1-security",

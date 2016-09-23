@@ -1,47 +1,62 @@
 'use strict';
 
 const exec = require('child_process').exec;
-const Rsync = require('rsync');
 const cpus = require('os').cpus().length;
 const async = require('async');
 
-let queues = async.queue((task, done) => {
-    find((data) => {
-        console.log(data);
-        done();
-    })
-}, cpus);
-
-queues.push();
-
 let host = '172.16.10.47';
 let username = 'operador';
-let source = './a';
+let source = '/cygdrive/d/aa/';
 let destination = '/Users/operador/teste';
 let timeToSearch = -60;
+let canFind = true;
 
-let rsync = new Rsync()
-    .shell(`ssh`)
-    .flags('rv')
-    .set('ignore-existing')
-    .destination(`${username}@${host}:${destination}`);
+doFind();
+
+setInterval(() => {
+    if (canFind) {
+        doFind();
+    }
+}, (timeToSearch * -1) * 10000);
+
+function doFind() {
+    async.queue((task, done) => {
+        find((data) => {
+            canFind = true;
+            //console.log(data || 'Terminado sem nenhuma alteração no diretório!');
+            done();
+        })
+    }, cpus).push();
+}
 
 function find(callback) {
-    exec(`find ${source} -cmin ${timeToSearch} -type f`, (error, stdout, stderr) => {
+    canFind = false;
+
+    exec(`bash --login -c 'find ${source} -cmin ${timeToSearch} -type f'`, (error, stdout, stderr) => {
         if (error) {
             console.error(error);
         }
 
         let files = stdout.split('\n');
-        files.splice(files.length - 1, 1);
 
-        rsync.source(files).execute((error, code, cmd) => {
-
-            if (error) {
-                console.error(error, cmd);
+        files = files.map(file => {
+            if (file.trim() != '') {
+                return '"' + file + '"';
             }
-
-            callback(files);
         });
+
+        files = files.join(' ');
+
+        if (stdout) {
+            exec(`bash --login -c 'rsync -rvh --ignore-existing ${files} ${username}@${host}:${destination}'`, (error, stdout, stderr) => {
+                if (error) {
+                    console.error(error);
+                }
+
+                console.log(stdout);
+            });
+        }
+
+        callback();
     });
 }

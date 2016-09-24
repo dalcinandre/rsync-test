@@ -7,7 +7,7 @@ const os = require('os');
 
 let host = '172.16.10.47';
 let username = 'operador';
-let source = './a/';
+let source = '/cygdrive/d/aa/';
 let destination = '/Users/operador/teste';
 let timeToSearch = -60;
 let canFind = true;
@@ -35,7 +35,7 @@ function find(callback) {
     canFind = false;
 
     let command = `find ${source} -cmin ${timeToSearch} -type f`;
-    exec((os.platform() == 'win32') ? `C:\\cygwin64\\bin\\bash --login -c ${command}` : command, (error, stdout, stderr) => {
+    exec((os.platform() == 'win32') ? `C:\\cygwin64\\bin\\bash --login -c '${command}'` : command, (error, stdout, stderr) => {
         if (error) {
             console.error(error);
         }
@@ -52,13 +52,15 @@ function find(callback) {
 
         if (stdout) {
             let command = `rsync -rvh --ignore-existing ${files} ${username}@${host}:${destination}`;
-            exec((os.platform() == 'win32') ? `C:\\cygwin64\\bin\\bash --login -c ${command}` : command, (error, stdout, stderr) => {
+            exec((os.platform() == 'win32') ? `C:\\cygwin64\\bin\\bash --login -c '${command}'` : command, (error, stdout, stderr) => {
                 if (error) {
                     console.error(error);
                 }
 
                 console.log(stdout);
             });
+        } else {
+            console.log('Nenhum arquivo encontrado para envio até o momento!');
         }
 
         callback();
